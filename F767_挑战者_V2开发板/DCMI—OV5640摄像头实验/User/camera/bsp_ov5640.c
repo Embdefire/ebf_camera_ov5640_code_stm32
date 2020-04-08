@@ -919,7 +919,7 @@ void OV5640_HW_Init(void)
     Delay(10);
     HAL_GPIO_WritePin(DCMI_RST_GPIO_PORT,DCMI_RST_GPIO_PIN,GPIO_PIN_SET);
 	//必须延时50ms,模块才会正常工作
-	Delay(50);
+	Delay(100);
 }
 /**
   * @brief  Resets the OV5640 camera.

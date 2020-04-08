@@ -8,7 +8,7 @@
   ******************************************************************************
   * @attention
   *
-  * 实验平台:秉火  STM32 F767 开发板 
+  * 实验平台:野火 STM32F767 开发板 
   * 论坛    :http://www.firebbs.cn
   * 淘宝    :http://firestm32.taobao.com
   *
@@ -17,7 +17,7 @@
 #include "./i2c/bsp_i2c.h"
 
   
-I2C_HandleTypeDef I2C_Handle;					
+I2C_HandleTypeDef Camera_I2C_Handle;					
 /*******************************  Function ************************************/
 
 /**
@@ -40,7 +40,7 @@ void I2CMaster_Init(void)
 	GPIO_InitStructure.Pin =  SENSORS_I2C_SCL_GPIO_PIN; 
 	GPIO_InitStructure.Mode = GPIO_MODE_AF_OD;
 	GPIO_InitStructure.Speed = GPIO_SPEED_HIGH;
-	GPIO_InitStructure.Pull= GPIO_NOPULL;
+	GPIO_InitStructure.Pull= GPIO_PULLUP;
 	GPIO_InitStructure.Alternate=SENSORS_I2C_AF; 
 	HAL_GPIO_Init(SENSORS_I2C_SCL_GPIO_PORT, &GPIO_InitStructure);
 
@@ -48,7 +48,7 @@ void I2CMaster_Init(void)
 	GPIO_InitStructure.Pin = SENSORS_I2C_SDA_GPIO_PIN;  
 	HAL_GPIO_Init(SENSORS_I2C_SDA_GPIO_PORT, &GPIO_InitStructure); 
 	
-	if(HAL_I2C_GetState(&I2C_Handle) == HAL_I2C_STATE_RESET)
+	if(HAL_I2C_GetState(&Camera_I2C_Handle) == HAL_I2C_STATE_RESET)
 	{	
 		/* 强制复位I2C外设时钟 */  
 		SENSORS_I2C_FORCE_RESET(); 
@@ -57,21 +57,21 @@ void I2CMaster_Init(void)
 		SENSORS_I2C_RELEASE_RESET(); 
 		
 		/* I2C 配置 */
-		I2C_Handle.Instance = SENSORS_I2C;
-		I2C_Handle.Init.Timing           = 0x60201E2B;//100KHz
-		I2C_Handle.Init.OwnAddress1      = 0;
-		I2C_Handle.Init.AddressingMode   = I2C_ADDRESSINGMODE_7BIT;
-		I2C_Handle.Init.DualAddressMode  = I2C_DUALADDRESS_DISABLE;
-		I2C_Handle.Init.OwnAddress2      = 0;
-		I2C_Handle.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
-		I2C_Handle.Init.GeneralCallMode  = I2C_GENERALCALL_DISABLE;
-		I2C_Handle.Init.NoStretchMode    = I2C_NOSTRETCH_DISABLE;
+		Camera_I2C_Handle.Instance = SENSORS_I2C;
+		Camera_I2C_Handle.Init.Timing           = 0x20404768;//100KHz
+		Camera_I2C_Handle.Init.OwnAddress1      = 0;
+		Camera_I2C_Handle.Init.AddressingMode   = I2C_ADDRESSINGMODE_7BIT;
+		Camera_I2C_Handle.Init.DualAddressMode  = I2C_DUALADDRESS_DISABLE;
+		Camera_I2C_Handle.Init.OwnAddress2      = 0;
+		Camera_I2C_Handle.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
+		Camera_I2C_Handle.Init.GeneralCallMode  = I2C_GENERALCALL_DISABLE;
+		Camera_I2C_Handle.Init.NoStretchMode    = I2C_NOSTRETCH_DISABLE;
 
 		/* 初始化I2C */
-		HAL_I2C_Init(&I2C_Handle);	
+		HAL_I2C_Init(&Camera_I2C_Handle);	
 		/* 使能模拟滤波器 */
-		HAL_I2CEx_AnalogFilter_Config(&I2C_Handle, I2C_ANALOGFILTER_ENABLE); 
-
+		HAL_I2CEx_AnalogFilter_Config(&Camera_I2C_Handle, I2C_ANALOGFILTER_ENABLE); 
+HAL_I2CEx_ConfigDigitalFilter(&Camera_I2C_Handle, 0);
 	}
 }
 /**
@@ -82,7 +82,7 @@ void I2CMaster_Init(void)
 static void I2Cx_Error(void)
 {
 	/* 恢复I2C寄存器为默认值 */
-	HAL_I2C_DeInit(&I2C_Handle); 
+	HAL_I2C_DeInit(&Camera_I2C_Handle); 
 	/* 重新初始化I2C外设 */
 	I2CMaster_Init();
 }
@@ -96,7 +96,7 @@ uint8_t OV5640_WriteReg(uint16_t Addr, uint8_t Data)
 {
   HAL_StatusTypeDef status = HAL_OK;
   
-  status = HAL_I2C_Mem_Write(&I2C_Handle, OV5640_DEVICE_ADDRESS, (uint16_t)Addr, I2C_MEMADD_SIZE_16BIT, (uint8_t*)&Data, 1, 1000);
+  status = HAL_I2C_Mem_Write(&Camera_I2C_Handle, OV5640_DEVICE_ADDRESS, (uint16_t)Addr, I2C_MEMADD_SIZE_16BIT, (uint8_t*)&Data, 1, 1000);
   
   /* Check the communication status */
   if(status != HAL_OK)
@@ -117,7 +117,7 @@ uint8_t OV5640_ReadReg(uint16_t Addr)
  
   HAL_StatusTypeDef status = HAL_OK;
 
-  status = HAL_I2C_Mem_Read(&I2C_Handle, OV5640_DEVICE_ADDRESS, (uint16_t)Addr, I2C_MEMADD_SIZE_16BIT, (uint8_t*)&Data, 1, 1000);
+  status = HAL_I2C_Mem_Read(&Camera_I2C_Handle, OV5640_DEVICE_ADDRESS, (uint16_t)Addr, I2C_MEMADD_SIZE_16BIT, (uint8_t*)&Data, 1, 1000);
 
   /* 检查通信状态 */
   if(status != HAL_OK)
@@ -141,7 +141,7 @@ uint8_t OV5640_WriteFW(uint8_t *pBuffer ,uint16_t BufferSize)
   uint16_t Addr=0x8000;
   HAL_StatusTypeDef status = HAL_OK;
   
-  status = HAL_I2C_Mem_Write(&I2C_Handle, OV5640_DEVICE_ADDRESS, (uint16_t)Addr, I2C_MEMADD_SIZE_16BIT, pBuffer, BufferSize, 1000);
+  status = HAL_I2C_Mem_Write(&Camera_I2C_Handle, OV5640_DEVICE_ADDRESS, (uint16_t)Addr, I2C_MEMADD_SIZE_16BIT, pBuffer, BufferSize, 1000);
   
   /* 检查通信状态 */
   if(status != HAL_OK)

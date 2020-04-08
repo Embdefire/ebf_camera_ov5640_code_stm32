@@ -37,8 +37,10 @@ uint8_t fps=0;
 int main(void)
 {
 	OV5640_IDTypeDef OV5640_Camera_ID;	
+  
     /* 系统时钟初始化成216 MHz */
     SystemClock_Config();
+  HAL_Init();
     /* LED 端口初始化 */
     LED_GPIO_Config();	
 	/*初始化USART1*/
@@ -71,9 +73,9 @@ int main(void)
     CAMERA_DEBUG("STM32F767 DCMI 驱动OV5640例程");
 
 	OV5640_HW_Init();			
-	//初始化 I2C
-	I2CMaster_Init(); 
-
+//初始化 I2C
+	I2CMaster_Init(); 	
+ 
 	/* 读取摄像头芯片ID，确定摄像头正常连接 */
 	OV5640_ReadID(&OV5640_Camera_ID);
 
@@ -104,7 +106,7 @@ int main(void)
             LCD_SelectLayer(1);       
             LCD_SetColors(LCD_COLOR_WHITE,TRANSPARENCY);
             sprintf((char*)dispBuf, " 帧率:%d FPS", fps/1);
-			LCD_ClearLine(2);
+            LCD_ClearLine(2);
             /*输出帧率*/
             LCD_DisplayStringLine_EN_CH(2,dispBuf);
             //重置
@@ -139,52 +141,61 @@ int main(void)
   */
 void SystemClock_Config(void)
 {
-	RCC_ClkInitTypeDef RCC_ClkInitStruct;
-	RCC_OscInitTypeDef RCC_OscInitStruct;
-	HAL_StatusTypeDef ret = HAL_OK;
+	RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+	RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
 
-	/* 使能HSE，配置HSE为PLL的时钟源，配置PLL的各种分频因子M N P Q 
+  HAL_StatusTypeDef ret = HAL_OK;
+
+  /* 使能HSE，配置HSE为PLL的时钟源，配置PLL的各种分频因子M N P Q 
 	 * PLLCLK = HSE/M*N/P = 25M / 25 *432 / 2 = 216M
 	 */
-	RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-	RCC_OscInitStruct.HSEState = RCC_HSE_ON;
-	RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-	RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-	RCC_OscInitStruct.PLL.PLLM = 25;
-	RCC_OscInitStruct.PLL.PLLN = 432;
-	RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-	RCC_OscInitStruct.PLL.PLLQ = 9;
-
-	ret = HAL_RCC_OscConfig(&RCC_OscInitStruct);
-	if(ret != HAL_OK)
-	{
-		while(1) { ; }
-	}
-
-	/* 激活 OverDrive 模式以达到216M频率  */  
-	ret = HAL_PWREx_EnableOverDrive();
-	if(ret != HAL_OK)
-	{
-		while(1) { ; }
-	}
-
-	/* 选择PLLCLK作为SYSCLK，并配置 HCLK, PCLK1 and PCLK2 的时钟分频因子 
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  RCC_OscInitStruct.PLL.PLLM = 25;
+  RCC_OscInitStruct.PLL.PLLN = 432;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+  RCC_OscInitStruct.PLL.PLLQ = 9;
+  
+  ret = HAL_RCC_OscConfig(&RCC_OscInitStruct);
+  if(ret != HAL_OK)
+  {
+    while(1) { ; }
+  }
+  
+  /* 激活 OverDrive 模式以达到216M频率  */  
+  ret = HAL_PWREx_EnableOverDrive();
+  if(ret != HAL_OK)
+  {
+    while(1) { ; }
+  }
+  
+  /* 选择PLLCLK作为SYSCLK，并配置 HCLK, PCLK1 and PCLK2 的时钟分频因子 
 	 * SYSCLK = PLLCLK     = 216M
 	 * HCLK   = SYSCLK / 1 = 216M
 	 * PCLK2  = SYSCLK / 2 = 108M
 	 * PCLK1  = SYSCLK / 4 = 54M
 	 */
-	RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);
-	RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-	RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-	RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;  
-	RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2; 
-
-	ret = HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_7);
-	if(ret != HAL_OK)
-	{
+  RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;  
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2; 
+  
+  ret = HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_7);
+  if(ret != HAL_OK)
+  {
+    while(1) { ; }
+  }  
+	
+  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_UART7;
+  PeriphClkInitStruct.Uart7ClockSelection = RCC_UART7CLKSOURCE_PCLK1;
+  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
+  {
 		while(1) { ; }
-	}  
+  }
 }
 
 /*********************************************END OF FILE**********************/
