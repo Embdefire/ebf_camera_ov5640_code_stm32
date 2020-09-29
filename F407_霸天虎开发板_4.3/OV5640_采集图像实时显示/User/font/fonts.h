@@ -27,5 +27,7 @@ extern sFONT Font8x16;
 //要支持中文需要实现本函数，可参考“液晶显示中英文（字库在外部FLASH）”例程
 #define      GetGBKCode( ucBuffer, usChar ) 
 
-
+/*******************中文********** 在显示屏上显示的字符大小 ***************************/
+#define      WIDTH_CH_CHAR		                32	    //中文字符宽度 
+#define      HEIGHT_CH_CHAR		              	32		  //中文字符高度 
 #endif /*end of __FONT_H    */

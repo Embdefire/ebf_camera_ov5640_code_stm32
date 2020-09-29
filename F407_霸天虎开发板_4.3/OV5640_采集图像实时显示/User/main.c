@@ -17,7 +17,7 @@
   
 #include "stm32f4xx.h"
 #include "./usart/bsp_debug_usart.h"
-#include "./lcd/bsp_ili9806g_lcd.h"
+#include "./lcd/bsp_nt35510_lcd.h"
 #include "./camera/bsp_ov5640.h"
 #include "./camera/ov5640_AF.h"
 #include "./systick/bsp_SysTick.h"
@@ -45,14 +45,14 @@ uint8_t fps=0;
 void ImagDisp(void)
 {
 		//扫描模式，横屏
-    ILI9806G_GramScan(cam_mode.lcd_scan);
+    NT35510_GramScan(cam_mode.lcd_scan);
     LCD_SetFont(&Font16x32);
 		LCD_SetColors(RED,BLACK);
 	
-    ILI9806G_Clear(0,0,LCD_X_LENGTH,LCD_Y_LENGTH);	/* 清屏，显示全黑 */
+    NT35510_Clear(0,0,LCD_X_LENGTH,LCD_Y_LENGTH);	/* 清屏，显示全黑 */
 
 	/*DMA会把数据传输到液晶屏，开窗后数据按窗口排列 */
-    ILI9806G_OpenWindow(cam_mode.lcd_sx,
+    NT35510_OpenWindow(cam_mode.lcd_sx,
 													cam_mode.lcd_sy,
 													cam_mode.cam_out_width,
 													cam_mode.cam_out_height);	
@@ -108,12 +108,12 @@ int main(void)
 {	
   uint8_t focus_status = 0;
 	
-	ILI9806G_Init ();         //LCD 初始化
+	NT35510_Init ();         //LCD 初始化
 	
 	LCD_SetFont(&Font16x32);
 	LCD_SetColors(RED,BLACK);
 
-  ILI9806G_Clear(0,0,LCD_X_LENGTH,LCD_Y_LENGTH);	/* 清屏，显示全黑 */
+  NT35510_Clear(0,0,LCD_X_LENGTH,LCD_Y_LENGTH);	/* 清屏，显示全黑 */
 
   Debug_USART_Config();   
 	
@@ -125,7 +125,7 @@ int main(void)
 	Key_GPIO_Config();
 
 	//液晶扫描方向
-	ILI9806G_GramScan(5);
+	NT35510_GramScan(5);
 	
   CAMERA_DEBUG("STM32F407 DCMI 驱动OV5640例程");
 
@@ -138,14 +138,14 @@ int main(void)
    if(OV5640_Camera_ID.PIDH  == 0x56)
   {
     sprintf((char*)dispBuf, "OV5640 Camera ID:0x%x,initializing... ", OV5640_Camera_ID.PIDH);
-		ILI9806G_DispStringLine_EN(LINE(0),dispBuf);
+		NT35510_DispStringLine_EN(LINE(0),dispBuf);
     CAMERA_DEBUG("检测到摄像头 %x %x",OV5640_Camera_ID.PIDH ,OV5640_Camera_ID.PIDL);
 
   }
   else
   {
     LCD_SetTextColor(RED);
-    ILI9806G_DispString_EN(10,10, "Can not detect OV5640 module,please check the connection!");
+    NT35510_DispString_EN(10,10, "Can not detect OV5640 module,please check the connection!");
     CAMERA_DEBUG("没有检测到OV5640摄像头，请重新检查连接。");
 
     while(1);  

@@ -47,13 +47,13 @@ OV5640_MODE_PARAM cam_mode =
 	.scaling = 1,      //使能自动缩放
 	.cam_out_sx = 16,	//使能自动缩放后，一般配置成16即可
 	.cam_out_sy = 4,	  //使能自动缩放后，一般配置成4即可
-	.cam_out_width = 854,
+	.cam_out_width = 800,
 	.cam_out_height = 480,
 	
 	//LCD位置
 	.lcd_sx = 0,
 	.lcd_sy = 0,
-	.lcd_scan = 5, //LCD扫描模式，本横屏配置可用1、3、5、7模式
+	.lcd_scan = 3, //LCD扫描模式，本横屏配置可用1、3、5、7模式
 	
 	//以下可根据自己的需要调整，参数范围见结构体类型定义	
 	.light_mode = 0,//自动光照模式
